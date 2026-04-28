@@ -5,6 +5,6 @@ thresholds:
   multiplier: 5.0
 
 ban_durations:
-  - 600
+  - 600  
   - 1800
   - 7200

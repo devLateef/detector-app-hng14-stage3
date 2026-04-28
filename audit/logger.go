@@ -18,6 +18,10 @@ func Log(action, ip, condition string, rate, baseline float64, duration int) {
 		duration,
 	)
 
+	// Write to stdout so docker logs captures it
+	fmt.Print(entry)
+
+	// Also persist to file
 	f, _ := os.OpenFile("audit.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	defer f.Close()
 	f.WriteString(entry)
