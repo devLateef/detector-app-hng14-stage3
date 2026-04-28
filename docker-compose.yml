@@ -1,0 +1,22 @@
+services:
+  detector-app:
+    build: .
+    container_name: detector-app
+    restart: unless-stopped
+
+    # Required to run iptables inside the container
+    cap_add:
+      - NET_ADMIN
+    network_mode: host
+
+    environment:
+      - SLACK_WEBHOOK=${SLACK_WEBHOOK}
+
+    volumes:
+      # Mount the host nginx log so the app can tail it
+      - /var/log/nginx:/var/log/nginx:ro
+      # Mount config so you can update it without rebuilding
+      - ./config.yaml:/app/config.yaml:ro
+
+    ports:
+      - "8081:8081"
