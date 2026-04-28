@@ -1,0 +1,20 @@
+log_file: /var/log/nginx/hng-access.log
+
+slack_webhook: ""  # Set via SLACK_WEBHOOK env var or override here
+
+thresholds:
+  z_score: 3.0
+  multiplier: 5.0
+  error_surge_multiplier: 3.0  # 4xx/5xx rate threshold multiplier
+
+ban_durations:
+  - 600    # 1st offence: 10 minutes
+  - 1800   # 2nd offence: 30 minutes
+  - 7200   # 3rd offence: 2 hours
+  # 4th+ offence: permanent (no unban)
+
+baseline:
+  window_seconds: 1800       # 30-minute rolling window
+  recalc_interval_seconds: 60 # Recalculate every 60 seconds
+  min_samples: 30             # Minimum samples before baseline is trusted
+  floor_mean: 0.1             # Minimum mean to avoid division by zero

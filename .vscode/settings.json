@@ -1,0 +1,9 @@
+{
+  "go.goroot": "",
+  "gopls": {
+    "workspaceFiles.exclude": {
+      "**/go.mod": false
+    }
+  },
+  "go.toolsManagement.autoUpdate": true
+}
