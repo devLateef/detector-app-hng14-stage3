@@ -1,0 +1,12 @@
+log_file: /var/log/nginx/hng-access.log
+
+slack_webhook: "https://hooks.slack.com/services/YOUR/WEBHOOK"
+
+thresholds:
+  z_score: 3.0
+  multiplier: 5.0
+
+ban_durations:
+  - 600
+  - 1800
+  - 7200
