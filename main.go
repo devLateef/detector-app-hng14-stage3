@@ -1,9 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"time"
-
 	"detector-app/audit"
 	"detector-app/baseline"
 	"detector-app/blocker"
@@ -16,10 +13,17 @@ import (
 	"detector-app/notifier"
 	"detector-app/unbanner"
 	"detector-app/window"
+	"fmt"
+	"os"
+	"time"
+
+	"github.com/joho/godotenv"
 )
 
 func main() {
-	// ✅ Load config FIRST
+
+	godotenv.Load()
+	//Load config FIRST
 	config.LoadConfig("config.yaml")
 
 	logChan := make(chan model.AccessLog)
@@ -58,9 +62,9 @@ func main() {
 
 			audit.Log("BAN", log.SourceIP, reason, rate, mean, duration)
 
-			// ✅ Use config webhook
+			// Use config webhook
 			notifier.Send(
-				config.AppConfig.SlackWebhook,
+				os.Getenv("SLACK_WEBHOOK"),
 				fmt.Sprintf("🚨 Blocked %s (%s) | rate=%.2f baseline=%.2f",
 					log.SourceIP, reason, rate, mean),
 			)
