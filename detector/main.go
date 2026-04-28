@@ -86,6 +86,19 @@ func main() {
 			bannedMu.Lock()
 			metrics.Set("banned_ips", bannedIPs)
 			bannedMu.Unlock()
+
+			// Hour slots for baseline graph
+			slots := base.HourSlots()
+			slotList := make([]map[string]any, 0, len(slots))
+			for hour, slot := range slots {
+				slotList = append(slotList, map[string]any{
+					"hour":   hour,
+					"mean":   slot.Mean,
+					"stddev": slot.StdDev,
+					"count":  slot.Count,
+				})
+			}
+			metrics.Set("hour_slots", slotList)
 		}
 	}()
 

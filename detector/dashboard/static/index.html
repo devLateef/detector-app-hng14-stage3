@@ -6,26 +6,11 @@
   <title>HNG Anomaly Detector Dashboard</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: #0f172a;
-      color: #e2e8f0;
-      font-family: 'Segoe UI', sans-serif;
-      padding: 24px;
-    }
+    body { background: #0f172a; color: #e2e8f0; font-family: 'Segoe UI', sans-serif; padding: 24px; }
     h1 { color: #38bdf8; margin-bottom: 4px; font-size: 1.6rem; }
     .subtitle { color: #64748b; font-size: 0.85rem; margin-bottom: 24px; }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-    .card {
-      background: #1e293b;
-      border-radius: 10px;
-      padding: 16px;
-      border: 1px solid #334155;
-    }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .card { background: #1e293b; border-radius: 10px; padding: 16px; border: 1px solid #334155; }
     .card .label { color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
     .card .value { font-size: 1.8rem; font-weight: 700; color: #f1f5f9; margin-top: 4px; }
     .card .value.alert { color: #f87171; }
@@ -42,6 +27,12 @@
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
     .footer { color: #475569; font-size: 0.75rem; margin-top: 16px; }
     .no-data { color: #475569; font-style: italic; padding: 8px; }
+    /* Baseline bar chart */
+    .bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 120px; padding: 8px 0; }
+    .bar-wrap { display: flex; flex-direction: column; align-items: center; flex: 1; }
+    .bar { width: 100%; background: #38bdf8; border-radius: 4px 4px 0 0; min-height: 4px; transition: height 0.3s; }
+    .bar-label { color: #94a3b8; font-size: 0.65rem; margin-top: 4px; }
+    .bar-val { color: #e2e8f0; font-size: 0.65rem; margin-bottom: 2px; }
   </style>
 </head>
 <body>
@@ -80,13 +71,19 @@
   </div>
 
   <div class="section">
-    <h2>Banned IPs</h2>
+    <h2>🚫 Banned IPs</h2>
     <div id="banned-list"><p class="no-data">No banned IPs</p></div>
   </div>
 
   <div class="section">
-    <h2>Top 10 Source IPs (last 60s)</h2>
+    <h2>📊 Top 10 Source IPs (last 60s)</h2>
     <div id="top-ips"><p class="no-data">No traffic yet</p></div>
+  </div>
+
+  <div class="section">
+    <h2>📈 Baseline Mean by Hour</h2>
+    <p style="color:#64748b;font-size:0.75rem;margin-bottom:12px;">Each bar shows the effective_mean for that hour slot. Needs traffic across at least 2 hours to show multiple bars.</p>
+    <div id="baseline-graph"><p class="no-data">Collecting data — needs at least 1 hour of traffic</p></div>
   </div>
 
   <p class="footer" id="last-updated">Last updated: —</p>
@@ -99,28 +96,59 @@
       return `${h}h ${m}m ${s}s`;
     }
 
+    function renderBaselineGraph(slots) {
+      const graphDiv = document.getElementById('baseline-graph');
+      if (!slots || slots.length === 0) {
+        graphDiv.innerHTML = '<p class="no-data">Collecting data — needs at least 1 hour of traffic</p>';
+        return;
+      }
+
+      // Sort by hour
+      slots.sort((a, b) => a.hour - b.hour);
+
+      const maxMean = Math.max(...slots.map(s => s.mean), 0.1);
+
+      let html = '<div class="bar-chart">';
+      slots.forEach(slot => {
+        const heightPct = Math.max((slot.mean / maxMean) * 100, 3);
+        const hourLabel = `${String(slot.hour).padStart(2,'0')}:00`;
+        html += `
+          <div class="bar-wrap">
+            <div class="bar-val">${slot.mean.toFixed(2)}</div>
+            <div class="bar" style="height:${heightPct}%" title="Hour ${hourLabel} | mean=${slot.mean.toFixed(2)} stddev=${slot.stddev.toFixed(2)} samples=${slot.count}"></div>
+            <div class="bar-label">${hourLabel}</div>
+          </div>`;
+      });
+      html += '</div>';
+
+      // Also show as table for clarity
+      html += '<table style="margin-top:12px"><thead><tr><th>Hour</th><th>Effective Mean</th><th>Std Dev</th><th>Samples</th></tr></thead><tbody>';
+      slots.forEach(slot => {
+        const hourLabel = `${String(slot.hour).padStart(2,'0')}:00`;
+        html += `<tr><td>${hourLabel}</td><td>${slot.mean.toFixed(4)}</td><td>${slot.stddev.toFixed(4)}</td><td>${slot.count}</td></tr>`;
+      });
+      html += '</tbody></table>';
+
+      graphDiv.innerHTML = html;
+    }
+
     function refresh() {
       fetch('/metrics')
         .then(res => res.json())
         .then(data => {
           document.getElementById('global-rate').textContent =
             data.global_rate !== undefined ? data.global_rate : '0';
-
           document.getElementById('mean').textContent =
             data.baseline_mean !== undefined ? data.baseline_mean.toFixed(2) : '0.00';
-
           document.getElementById('stddev').textContent =
             data.baseline_stddev !== undefined ? data.baseline_stddev.toFixed(2) : '0.00';
 
           const bannedIPs = data.banned_ips || [];
           document.getElementById('banned-count').textContent = bannedIPs.length;
-
           document.getElementById('goroutines').textContent =
             data.goroutines !== undefined ? data.goroutines : '—';
-
           document.getElementById('memory').textContent =
             data.memory_mb !== undefined ? data.memory_mb.toFixed(1) + ' MB' : '—';
-
           document.getElementById('uptime').textContent =
             data.uptime_seconds !== undefined ? formatUptime(data.uptime_seconds) : '—';
 
@@ -151,12 +179,13 @@
             topDiv.innerHTML = html;
           }
 
+          // Baseline graph
+          renderBaselineGraph(data.hour_slots || []);
+
           document.getElementById('last-updated').textContent =
             'Last updated: ' + new Date().toLocaleTimeString();
         })
-        .catch(err => {
-          console.error('Failed to fetch metrics:', err);
-        });
+        .catch(err => console.error('Failed to fetch metrics:', err));
     }
 
     refresh();
