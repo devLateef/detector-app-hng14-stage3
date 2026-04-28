@@ -22,7 +22,11 @@ import (
 
 func main() {
 
-	godotenv.Load()
+	// Load .env file for local development (outside Docker)
+	// In Docker, env vars are injected by docker-compose
+	if _, err := os.Stat(".env"); err == nil {
+		godotenv.Load()
+	}
 	//Load config FIRST
 	config.LoadConfig("config.yaml")
 
