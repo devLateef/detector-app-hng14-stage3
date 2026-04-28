@@ -33,10 +33,11 @@ func main() {
 	win := window.NewWindow()
 	base := baseline.NewBaseline()
 
-	// Track banned IPs for dashboard
+	// bannedMap tracks currently banned IPs keyed by IP for deduplication.
+	// Value is the ban timestamp string.
 	var (
 		bannedMu  sync.Mutex
-		bannedIPs []map[string]string
+		bannedMap = make(map[string]string) // ip -> banned_at
 	)
 
 	// Start log tailer
@@ -82,10 +83,17 @@ func main() {
 			}
 			metrics.Set("top_ips", topList)
 
-			// Banned IPs
+			// Banned IPs — convert map to list for dashboard
 			bannedMu.Lock()
-			metrics.Set("banned_ips", bannedIPs)
+			bannedList := make([]map[string]string, 0, len(bannedMap))
+			for ip, bannedAt := range bannedMap {
+				bannedList = append(bannedList, map[string]string{
+					"ip":        ip,
+					"banned_at": bannedAt,
+				})
+			}
 			bannedMu.Unlock()
+			metrics.Set("banned_ips", bannedList)
 
 			// Hour slots for baseline graph
 			slots := base.HourSlots()
@@ -121,16 +129,24 @@ func main() {
 		if anomaly {
 			duration := unbanner.Schedule(log.SourceIP)
 			blocker.BlockIP(log.SourceIP)
-
 			audit.Log("BAN", log.SourceIP, reason, rate, mean, duration)
 
-			// Track banned IP for dashboard
+			// Add to banned map (map key deduplicates automatically)
 			bannedMu.Lock()
-			bannedIPs = append(bannedIPs, map[string]string{
-				"ip":        log.SourceIP,
-				"banned_at": time.Now().UTC().Format(time.RFC3339),
-			})
+			if _, exists := bannedMap[log.SourceIP]; !exists {
+				bannedMap[log.SourceIP] = time.Now().UTC().Format(time.RFC3339)
+			}
 			bannedMu.Unlock()
+
+			// Schedule removal from banned map after unban
+			go func(ip string, dur int) {
+				if dur > 0 {
+					time.Sleep(time.Duration(dur) * time.Second)
+					bannedMu.Lock()
+					delete(bannedMap, ip)
+					bannedMu.Unlock()
+				}
+			}(log.SourceIP, duration)
 
 			// Slack ban alert with full context
 			banMsg := fmt.Sprintf(
@@ -140,7 +156,7 @@ func main() {
 			)
 			if duration == -1 {
 				banMsg = fmt.Sprintf(
-					"*!!! PERMANENT BAN* | IP: `%s` | Condition: %s | Rate: %.2f req/s | Baseline: %.2f | Time: %s",
+					"*PERMANENT BAN* | IP: `%s` | Condition: %s | Rate: %.2f req/s | Baseline: %.2f | Time: %s",
 					log.SourceIP, reason, rate, mean,
 					time.Now().UTC().Format(time.RFC3339),
 				)
@@ -152,7 +168,6 @@ func main() {
 		globalAnomaly, globalReason := detector.IsGlobalAnomaly(globalRate, mean, std)
 		if globalAnomaly {
 			audit.Log("GLOBAL_ALERT", "-", globalReason, globalRate, mean, 0)
-
 			notifier.Send(config.AppConfig.SlackWebhook, fmt.Sprintf(
 				"*GLOBAL ANOMALY* | Condition: %s | Global Rate: %.2f req/s | Baseline: %.2f | StdDev: %.2f | Time: %s",
 				globalReason, globalRate, mean, std,
