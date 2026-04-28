@@ -31,7 +31,7 @@ func main() {
 	win := window.NewWindow()
 	base := baseline.Baseline{}
 
-	// ✅ Use config log path
+	// Use config log path
 	go monitor.TailLog(config.AppConfig.LogFile, logChan)
 
 	go dashboard.Start()
@@ -65,7 +65,7 @@ func main() {
 			// Use config webhook
 			notifier.Send(
 				os.Getenv("SLACK_WEBHOOK"),
-				fmt.Sprintf("🚨 Blocked %s (%s) | rate=%.2f baseline=%.2f",
+				fmt.Sprintf("Blocked %s (%s) | rate=%.2f baseline=%.2f",
 					log.SourceIP, reason, rate, mean),
 			)
 		}
