@@ -3,17 +3,28 @@ package monitor
 import (
 	"bufio"
 	"encoding/json"
+	"log"
 	"os"
+	"time"
 
 	"detector-app/model"
 )
 
 func TailLog(filePath string, out chan<- model.AccessLog) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		panic(err)
+	// Retry opening the file until it exists (e.g. nginx hasn't started yet)
+	var file *os.File
+	for {
+		var err error
+		file, err = os.Open(filePath)
+		if err == nil {
+			break
+		}
+		log.Printf("[monitor] waiting for log file %s: %v", filePath, err)
+		time.Sleep(3 * time.Second)
 	}
+	defer file.Close()
 
+	// Seek to end so we only process new lines
 	file.Seek(0, 2)
 
 	reader := bufio.NewReader(file)
@@ -21,12 +32,13 @@ func TailLog(filePath string, out chan<- model.AccessLog) {
 	for {
 		line, err := reader.ReadBytes('\n')
 		if err != nil {
+			time.Sleep(100 * time.Millisecond)
 			continue
 		}
 
-		var log model.AccessLog
-		if err := json.Unmarshal(line, &log); err == nil {
-			out <- log
+		var entry model.AccessLog
+		if err := json.Unmarshal(line, &entry); err == nil {
+			out <- entry
 		}
 	}
 }
