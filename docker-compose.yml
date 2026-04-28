@@ -24,8 +24,6 @@ services:
 
     env_file:
       - .env
-    environment:
-      - SLACK_WEBHOOK=${SLACK_WEBHOOK}
 
     volumes:
       # Same shared volume — detector reads what nginx writes
