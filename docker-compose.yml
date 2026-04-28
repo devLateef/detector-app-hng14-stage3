@@ -22,8 +22,8 @@ services:
       - NET_ADMIN
     network_mode: host
 
-    environment:
-      - SLACK_WEBHOOK=${SLACK_WEBHOOK}
+    env_file:
+      - .env
 
     volumes:
       # Same shared volume — detector reads what nginx writes
