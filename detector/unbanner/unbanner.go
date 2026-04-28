@@ -36,7 +36,7 @@ func Schedule(ip string) int {
 		notifier.Send(
 			config.AppConfig.SlackWebhook,
 			fmt.Sprintf(
-				"🔓 *UNBAN* | IP: `%s` | Ban duration: %ds | Time: %s",
+				"*UNBAN* | IP: `%s` | Ban duration: %ds | Time: %s",
 				ip,
 				duration,
 				time.Now().UTC().Format(time.RFC3339),

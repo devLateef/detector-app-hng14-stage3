@@ -121,13 +121,13 @@ func main() {
 
 			// Slack ban alert with full context
 			banMsg := fmt.Sprintf(
-				"🚨 *BAN* | IP: `%s` | Condition: %s | Rate: %.2f req/s | Baseline: %.2f | StdDev: %.2f | Duration: %ds | Time: %s",
+				"*BAN* | IP: `%s` | Condition: %s | Rate: %.2f req/s | Baseline: %.2f | StdDev: %.2f | Duration: %ds | Time: %s",
 				log.SourceIP, reason, rate, mean, std, duration,
 				time.Now().UTC().Format(time.RFC3339),
 			)
 			if duration == -1 {
 				banMsg = fmt.Sprintf(
-					"🚨 *PERMANENT BAN* | IP: `%s` | Condition: %s | Rate: %.2f req/s | Baseline: %.2f | Time: %s",
+					"*!!! PERMANENT BAN* | IP: `%s` | Condition: %s | Rate: %.2f req/s | Baseline: %.2f | Time: %s",
 					log.SourceIP, reason, rate, mean,
 					time.Now().UTC().Format(time.RFC3339),
 				)
@@ -141,7 +141,7 @@ func main() {
 			audit.Log("GLOBAL_ALERT", "-", globalReason, globalRate, mean, 0)
 
 			notifier.Send(config.AppConfig.SlackWebhook, fmt.Sprintf(
-				"⚠️ *GLOBAL ANOMALY* | Condition: %s | Global Rate: %.2f req/s | Baseline: %.2f | StdDev: %.2f | Time: %s",
+				"*GLOBAL ANOMALY* | Condition: %s | Global Rate: %.2f req/s | Baseline: %.2f | StdDev: %.2f | Time: %s",
 				globalReason, globalRate, mean, std,
 				time.Now().UTC().Format(time.RFC3339),
 			))
