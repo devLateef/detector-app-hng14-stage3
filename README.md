@@ -4,9 +4,9 @@ A real-time HTTP traffic anomaly detector built in Go, running alongside Nextclo
 
 ## Server Details
 
-- **Server IP**: `<YOUR_SERVER_IP>`
-- **Metrics Dashboard**: `http://<YOUR_DOMAIN>:8081`
-- **Nextcloud**: `http://<YOUR_SERVER_IP>` (IP only)
+- **Server IP**: `16.171.177.72`
+- **Metrics Dashboard**: `http://16.171.177.72:8081`
+- **Nextcloud**: `http://16.171.177.72` (IP only)
 
 ## Language Choice
 
@@ -59,7 +59,7 @@ curl -fsSL https://get.docker.com | sh
 sudo usermod -aG docker $USER
 
 # 2. Clone the repository
-git clone https://github.com/<YOUR_USERNAME>/<YOUR_REPO>.git
+git clone https://github.com/devLateef/detector-app-hng14-stage3.git
 cd <YOUR_REPO>
 
 # 3. Create .env with your Slack webhook
@@ -77,8 +77,8 @@ docker logs detector -f
 
 ## GitHub Repository
 
-[https://github.com/<YOUR_USERNAME>/<YOUR_REPO>](https://github.com/<YOUR_USERNAME>/<YOUR_REPO>)
+[https://github.com/devLateef/detector-app-hng14-stage3](https://github.com/devLateef/detector-app-hng14-stage3)
 
 ## Blog Post
 
-[Link to blog post](<YOUR_BLOG_URL>)
+[Link to blog post](https://medium.com/p/306f3749468b?postPublishedType=initial)
