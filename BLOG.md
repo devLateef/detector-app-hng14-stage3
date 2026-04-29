@@ -177,7 +177,7 @@ Here's the full flow when an attack happens:
 3. The baseline says normal traffic is ~2 req/s with stddev 0.5
 4. Z-score: `(500 - 2) / 0.5 = 996` — way above 3.0
 5. `iptables -A INPUT -s 1.2.3.4 -j DROP` fires
-6. Slack alert sent: "🚨 BAN | IP: 1.2.3.4 | z-score | Rate: 500 | Baseline: 2.00"
+6. Slack alert sent: "BAN | IP: 1.2.3.4 | z-score | Rate: 500 | Baseline: 2.00"
 7. Audit log entry written
 8. After 10 minutes, the ban is automatically lifted and another Slack alert fires
 
