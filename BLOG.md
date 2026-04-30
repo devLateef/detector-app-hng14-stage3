@@ -192,5 +192,4 @@ The whole detection-to-block cycle happens within milliseconds of the anomalous 
 - **Per-hour baselines** handle natural traffic variation across the day
 - **iptables** is the right tool for blocking at the kernel level — fast, reliable, no application overhead
 - **Go goroutines** make it easy to do many things concurrently with minimal resources
-
 The full source code is available at: [https://github.com/devLateef/detector-app-hng14-stage3](https://github.com/devLateef/detector-app-hng14-stage3)
